@@ -33,7 +33,7 @@ def conv_gauss(img, kernel):
 
 def gaussian_pyramid(img, kernel, max_levels=5):
     current = img
-    pyr = []
+    pyr = [current]
 
     for level in range(max_levels):
         filtered = conv_gauss(current, kernel)
