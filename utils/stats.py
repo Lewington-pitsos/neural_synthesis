@@ -6,7 +6,7 @@ def gram_matrix(input):
     # (c,d)=dimensions of a f. map (N=c*d)
 
     features = input.view(a * b, c * d) # resise F_XL into \hat F_XL
-
+    
     G = torch.mm(features, features.t())  # compute the gram product
 
     # we 'normalize' the values of the gram matrix
