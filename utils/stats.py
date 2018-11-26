@@ -12,3 +12,15 @@ def gram_matrix(input):
     # we 'normalize' the values of the gram matrix
     # by dividing by the number of element in each feature maps.
     return G.div(a * b * c * d)
+
+def extract_features(model, hooks, input, callback=None):
+    """
+    Runs the input through the model and then returns all the feature maps collected
+    by the hooks. Passes each feature map through an optional callback function
+    """
+    model(input)
+    
+    if callback == None:
+        return [hook.features for hook in hooks]
+    
+    return [callback(hook.features) for hook in hooks]
