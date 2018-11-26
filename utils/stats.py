@@ -13,12 +13,12 @@ def gram_matrix(input):
     # by dividing by the number of element in each feature maps.
     return G.div(a * b * c * d)
 
-def extract_features(model, hooks, input, callback=None):
+def extract_features(hooks, callback=None):
     """
-    Runs the input through the model and then returns all the feature maps collected
-    by the hooks. Passes each feature map through an optional callback function
+    We assume an input has just been passed through the model. We return all
+    the features collected by the passed in hooks, possibly processed through
+    a callback function.
     """
-    model(input)
     
     if callback == None:
         return [hook.features for hook in hooks]

@@ -1,5 +1,4 @@
-data/samples/*
+data/original/*
 __pycache__
-data/style/*
-data/content/*
+data/synth/*
 .ipynb_checkpoints

@@ -27,33 +27,28 @@ class LossCollector():
     def __init__(self):
         self.loss_fns = defaultdict(lambda: [])
         self.reset()
+        self.losses = []
     
     def add_loss_fn(self, name: str, fn: LossFn):
         self.loss_fns[name] += [fn]
     
-    def collect_losses_for(self, name) -> int:
+    def collect_losses_for(self, name):
         if self.loss_fns[name] == []:
             raise ValueError("Name does not match any loss group.")
 
-        current_loss = torch.tensor(0)
-
         for loss_fn in self.loss_fns[name]:
-            current_loss += loss_fn.loss()
-        
-        self.total_loss += current_loss
-        return current_loss
+            self.losses.append(loss_fn.loss())
     
-    def collect_total_loss(self) -> int:
+    def collect_total_loss(self):
         for name in self.loss_fns:
             self.collect_losses_for(name)
-        
-        return self.total_loss
 
     def get_loss(self, reset: bool=False) -> torch.Tensor:
-        loss = self.total_loss
+        print(self.losses)
+        loss = sum(self.losses)
         if reset:
             self.reset()
         return loss
 
     def reset(self):
-        self.total_loss = torch.tensor(0)
+        self.losses = []
