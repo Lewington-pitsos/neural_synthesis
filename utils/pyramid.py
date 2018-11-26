@@ -1,10 +1,10 @@
 # This code was mostly ruthlessly appropriated from tyneumann's "Minimal PyTorch implementation of Generative Latent Optimization" https://github.com/tneumann/minimal_glo. Thank the lord for clever germans.
 
 import numpy as np
-
 import torch
 import torch.nn.functional as fnn
 from torch.autograd import Variable
+from utils import img
 
 
 def build_gauss_kernel(size=5, sigma=1.0, n_channels=1, cuda=False):
@@ -30,7 +30,6 @@ def conv_gauss(img, kernel):
     img = fnn.pad(img, (kw//2, kh//2, kw//2, kh//2), mode='replicate')
     return fnn.conv2d(img, kernel, groups=n_channels)
 
-
 def gaussian_pyramid(img, kernel, max_levels=5):
     current = img
     pyr = [current]
@@ -41,3 +40,11 @@ def gaussian_pyramid(img, kernel, max_levels=5):
         pyr.append(current)
 
     return pyr
+
+def pyramid_from(img, max_levels=5):
+    kernel = build_gauss_kernel(n_channels=3, cuda=True)
+    return gaussian_pyramid(img, kernel, max_levels)
+
+def show_pyramid(pyramid: list):
+    for level in pyramid:
+        img.show_image(level)

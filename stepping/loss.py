@@ -44,7 +44,6 @@ class LossCollector():
             self.collect_losses_for(name)
 
     def get_loss(self, reset: bool=False) -> torch.Tensor:
-        print(self.losses)
         loss = sum(self.losses)
         if reset:
             self.reset()
