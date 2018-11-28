@@ -28,25 +28,36 @@ def extract_features(hooks, callback=None):
     
     return [callback(hook.features) for hook in hooks]
 
-def thinned(tensor, axis_offset: int=0):
+
+def thinned_axis(ndarray, distance, axis):
+    for i in range(distance):
+        ndarray = np.delete(ndarray, 0 + i, axis=axis)
+        ndarray = np.delete(ndarray, -1 - i, axis=axis)
+
+    return ndarray
+
+def thinned(tensor, axis_offset: int=0, x: int=1, y: int=1):
     """
     Accepts a tensor. Returns a clone of that tensor with edge
     values raplced with 0's. Axis offset is used for tensors with
     > 2 dimensions.
     """
-    x_axis = 0 + axis_offset
-    y_axis = 1 + axis_offset
+    x_axis = 1 + axis_offset
+    y_axis = axis_offset
     
     if torch.cuda.is_available(): # must convert to cpu if currently on gpu
         tensor = tensor.cpu()
 
     ndarray = tensor.detach().numpy()
-    ndarray = np.delete(ndarray, 0, axis=x_axis)
-    ndarray = np.delete(ndarray, 0, axis=y_axis)
-    ndarray = np.delete(ndarray, -1, axis=x_axis)
-    ndarray = np.delete(ndarray, -1, axis=y_axis)
-    
-    padding_tuples = [(0, 0) for i in range(axis_offset)] + [(1, 1), (1, 1)]
+    padding_tuples = [(0, 0) for i in range(axis_offset)] + [(0, 0), (0, 0)]
+
+    if x > 0:
+        ndarray = thinned_axis(ndarray, x, x_axis)
+        padding_tuples[-1] = (x, x)
+
+    if y > 0:
+        ndarray = thinned_axis(ndarray, y, y_axis)
+        padding_tuples[-2] = (y, y)
     
     return torch.from_numpy(np.pad(ndarray, padding_tuples, "constant")).to(device)
 
@@ -55,6 +66,7 @@ def shifted(tensor, distance: int, axis: int):
     Accepts a tensor. Returns a clonde of that tensor shifted
     by the given distance along the given axis.
     """
+    
     if torch.cuda.is_available(): # must convert to cpu if currently on gpu
         tensor = tensor.cpu()
 
@@ -68,7 +80,6 @@ def all_shifts(tensor, x: int=1, y: int=1, axis_offset: int=0, diagonal: bool=Tr
     Creates and returns a new tensor by shifting tensor in all 8 
     directions. 
     """
-    thinned_tensor = thinned(tensor, axis_offset)
 
     offest_tuples = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
@@ -80,6 +91,7 @@ def all_shifts(tensor, x: int=1, y: int=1, axis_offset: int=0, diagonal: bool=Tr
 
     shifts = []
     for offset in offest_tuples: 
+        thinned_tensor = thinned(tensor, axis_offset=axis_offset, x=abs(offset[1]), y=abs(offset[0]))
         shifts.append(shifted(thinned_tensor, offset, (0 + axis_offset, 1 + axis_offset)))
 
     
