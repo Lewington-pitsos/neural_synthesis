@@ -61,16 +61,26 @@ def shifted(tensor, distance: int, axis: int):
     ndarray = tensor.detach().cpu().numpy()
     return torch.from_numpy(np.roll(ndarray, distance, axis)).to(device)
 
-def all_shifts(tensor, axis_offset: int=0):
+
+def all_shifts(tensor, x: int=1, y: int=1, axis_offset: int=0, diagonal: bool=True):
     """
     Replaces the edges of the last two dimensions in tensor with 0's.
     Creates and returns a new tensor by shifting tensor in all 8 
     directions. 
     """
     thinned_tensor = thinned(tensor, axis_offset)
+
+    offest_tuples = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+    if diagonal:
+        offest_tuples += [(-1, -1), (1, -1), (-1, 1), (1, 1)]
     
+    for index in range(len(offest_tuples)):
+        offest_tuples[index] = (offest_tuples[index][0] * x, offest_tuples[index][1] * y)
+
     shifts = []
-    for offset in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (1, -1), (-1, 1), (1, 1)]:
+    for offset in offest_tuples: 
         shifts.append(shifted(thinned_tensor, offset, (0 + axis_offset, 1 + axis_offset)))
+
     
     return torch.stack(shifts)
