@@ -30,17 +30,18 @@ def extract_features(hooks, callback=None):
 
 
 def thinned_axis(ndarray, distance, axis):
-    for i in range(distance):
-        ndarray = np.delete(ndarray, 0 + i, axis=axis)
-        ndarray = np.delete(ndarray, -1 - i, axis=axis)
+    for _ in range(distance):
+        ndarray = np.delete(ndarray, 0, axis=axis)
+        ndarray = np.delete(ndarray, -1, axis=axis)
 
     return ndarray
 
 def thinned(tensor, axis_offset: int=0, x: int=1, y: int=1):
     """
     Accepts a tensor. Returns a clone of that tensor with edge
-    values raplced with 0's. Axis offset is used for tensors with
-    > 2 dimensions.
+    values raplced with 0's. 
+    x and y dictate how many edge values along each axis to replace. 
+    axis_offset is used for tensors with > 2 dimensions.
     """
     x_axis = 1 + axis_offset
     y_axis = axis_offset
@@ -74,11 +75,12 @@ def shifted(tensor, distance: int, axis: int):
     return torch.from_numpy(np.roll(ndarray, distance, axis)).to(device)
 
 
-def all_shifts(tensor, x: int=1, y: int=1, axis_offset: int=0, diagonal: bool=True):
+def all_shifts(tensor, x, y, axis_offset: int=0, diagonal: bool=True) -> list:
     """
-    Replaces the edges of the last two dimensions in tensor with 0's.
-    Creates and returns a new tensor by shifting tensor in all 8 
+    Creates and returns a new tensor by shifting tensor in 4 or 8 
     directions. 
+    x and y dictate how far to shift along those axies. 
+    axis_offset is used for tensors with > 2 dimensions.
     """
 
     offest_tuples = [(-1, 0), (1, 0), (0, -1), (0, 1)]
@@ -91,8 +93,26 @@ def all_shifts(tensor, x: int=1, y: int=1, axis_offset: int=0, diagonal: bool=Tr
 
     shifts = []
     for offset in offest_tuples: 
-        thinned_tensor = thinned(tensor, axis_offset=axis_offset, x=abs(offset[1]), y=abs(offset[0]))
+        thinned_tensor = thinned(tensor, axis_offset=axis_offset, x=offset[1], y=offset[0])
         shifts.append(shifted(thinned_tensor, offset, (0 + axis_offset, 1 + axis_offset)))
 
-    
     return torch.stack(shifts)
+
+def all_half_shifts(tensor, diagonal: bool=True) -> list:
+    """
+    Returns all possible combinations of shifts of passed in tensor
+    within the passed in x and y ranges. 
+    """
+
+    shifts = []
+
+    axis_offset = tensor.dim() - 2
+
+    x_axis_size = tensor.size()[axis_offset + 1]
+    y_axis_size = tensor.size()[axis_offset]
+
+    for i in range(x_axis_size // 2):
+        for j in range(y_axis_size // 2):
+            shifts.append(all_shifts(tensor, x=i, y=j, axis_offset=axis_offset, diagonal=diagonal))
+    
+    return shifts
