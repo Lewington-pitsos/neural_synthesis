@@ -2,3 +2,4 @@ data/original/*
 __pycache__
 data/synth/*
 .ipynb_checkpoints
+.mypy_cache
