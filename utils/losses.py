@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from utils import stats
+from utils import stats, shift
 
 def smoothing_loss(tensor, sigma=0.0001):
     """
@@ -37,3 +37,26 @@ def smoothing_loss(tensor, sigma=0.0001):
 
     print(sum_log)
     return (1) / ((sum_log * (2 * sigma)))
+
+def deep_correlation_score(tensor):
+    # Generate displacements
+    shifter = shift.Shifter()
+    
+    x_size = tensor.size()[3]
+    y_size = tensor.size()[2]
+    x_max =  x_size // 2
+    y_max = y_size // 2
+
+    displacements = shifter.all_displacements(tensor, x_max, y_max)
+
+    # Calculate total score
+    score = 0
+    for displacement in displacements:
+        x_displacement, y_displacement = displacement[1] 
+        weighting = ((x_size - abs(x_displacement)) * (y_size - abs(y_displacement))) ** -1
+        score += weighting * (tensor - displacement[0])
+    
+    return score
+  
+
+
