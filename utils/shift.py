@@ -1,3 +1,4 @@
+import itertools
 import torch
 import numpy as np
 
@@ -67,3 +68,17 @@ class Shifter():
         self.__validate()
 
         return self.__thinned(self.__shifted())
+    
+    def all_displacements(self, tensor, x_max: int, y_max: int):
+        """
+        Returns a huge list of all possible displacements of tensor where
+        the distance of the displacement is withing the passed in axes 
+        max distances.
+        """
+        x_displacements = list(range(-x_max, x_max + 1))
+        y_displacements = list(range(-y_max, y_max + 1))
+
+        displacements = itertools.product(x_displacements, y_displacements)
+
+        return [self.displaced(tensor, displacement) for displacement in displacements]
+
