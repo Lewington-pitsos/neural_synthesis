@@ -51,6 +51,14 @@ class Shifter():
         ndarray = self.__tensor.detach().cpu().numpy()
 
         return torch.from_numpy(np.roll(ndarray, self.__distance, self.__axes)).to(self.__device)
+    
+    def cross_displacements(self, tensor):
+        """
+        Returns all displacements of distance 1 along either the x 
+        or the y axes, but never both at once.
+        """
+        displacements = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+        return [self.displaced(tensor, displacement) for displacement in displacements]
 
 
     def displaced(self, tensor, distance: tuple):
