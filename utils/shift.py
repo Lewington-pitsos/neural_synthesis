@@ -15,11 +15,8 @@ class Shifter():
         if self.__tensor.dim() != self.__dimensions_expected:
             raise ValueError("tensor has the wrong number of dimensions, expecting:  {}".format(self.__dimensions_expected))
 
-        if self.__distance[0] < 0 or self.__distance[1] < 0:
-            raise ValueError("Distance is invalid: negative value detected")
-
-        if self.__tensor.size(3) <= self.__distance[0] or self.__tensor.size(2) <= self.__distance[1]:
-            raise ValueError("Distance is invalid: value too high")
+        if self.__tensor.size(3) <= abs(self.__distance[0]) or self.__tensor.size(2) <= abs(self.__distance[1]):
+            raise ValueError("Distance is invalid: value too great")
         
 
     def __thinned(self, tensor):
@@ -33,14 +30,14 @@ class Shifter():
         tensor_clone = tensor.clone()
         x, y = self.__distance
 
-        if self.__from_start:
+        if y >= 0:
             tensor_clone[:, :, :y] = 0
+        else:
+            tensor_clone[:, :, y:] = 0
+        if x >= 0:
             tensor_clone[:, :, :, :x] = 0
         else:
-            if y > 0:
-                tensor_clone[:, :, -y:] = 0
-            if x > 0:
-                tensor_clone[:, :, :, -x:] = 0
+            tensor_clone[:, :, :, x:] = 0
 
         return tensor_clone
 
@@ -52,12 +49,10 @@ class Shifter():
 
         ndarray = self.__tensor.detach().cpu().numpy()
 
-        distance = self.__distance if self.__from_start else (self.__distance[0] * -1, self.__distance[1] * -1)
-
-        return torch.from_numpy(np.roll(ndarray, distance, self.__axes)).to(self.__device)
+        return torch.from_numpy(np.roll(ndarray, self.__distance, self.__axes)).to(self.__device)
 
 
-    def displaced(self, tensor, distance: tuple, from_start: bool = True):
+    def displaced(self, tensor, distance: tuple):
         """
         Returns a clone of the current tensor shifted along the x and y
         axies according to distance (x, y). Values shifted off the edge do
@@ -67,7 +62,6 @@ class Shifter():
         if torch.cuda.is_available(): # must convert to cpu if currently on gpu
             tensor = tensor.cpu()
 
-        self.__from_start = from_start
         self.__distance = distance
         self.__tensor = tensor
         self.__validate()
