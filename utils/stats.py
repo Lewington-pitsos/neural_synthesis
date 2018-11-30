@@ -6,14 +6,18 @@ from utils import shift, debug
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 dimensions_expected = 4
 
-def channel_normalize_(tensor):
+def channel_normalized(tensor):
     if tensor.dim() != dimensions_expected:
         raise ValueError("tensor has the wrong number of dimensions, expecting:  {}".format(dimensions_expected))
 
+    mean_channels = []
+    std_channels = []
+
     for i in range(tensor.size()[1]):
-        print(tensor[:, i].std())
-        tensor[:, i] -= tensor[:, i].mean()
-        tensor[:, i] /= tensor[:, i].std()
+        mean_channels.append(torch.ones(tensor.size()[2], tensor.size()[3]).to(device) * tensor[:, i].mean())
+        std_channels.append(torch.ones(tensor.size()[2], tensor.size()[3]).to(device) * tensor[:, i].std())
+    
+    return (tensor - torch.stack(mean_channels).unsqueeze(0)) / torch.stack(std_channels).unsqueeze(0)
 
 def gram_matrix(input):
     a, b, c, d = input.size()  # a=batch size(=1)
@@ -61,9 +65,7 @@ def deep_correlation_matrix(tensor):
         )
         matrix[:, :, y_displacement + y_max_displacement - 1, x_displacement + x_max_displacement - 1] = displacement_score
 
-    channel_normalize_(matrix)
-
-    return matrix
+    return channel_normalized(matrix)
 
 def extract_features(hooks, callback=None):
     """

@@ -22,13 +22,9 @@ def vgg19(normalized=True, avg_pool=True):
     normalization_layer = layers.Normalization(normalization_mean, normalization_std).to(device)
     useful_layers.insert(0, normalization_layer)
 
-  vgg = nn.Sequential(*useful_layers)
-
   if avg_pool:
-    vgg_layers = list(vgg.children())
-
-    for i in range(len(vgg_layers)):
-        if (vgg_layers[i].__class__.__name__ == "MaxPool2d"):
-            vgg_layers[i] = nn.AvgPool2d(2)
+    for i in range(len(useful_layers)):
+        if (useful_layers[i].__class__.__name__ == "MaxPool2d"):
+            useful_layers[i] = nn.AvgPool2d(2)
   
-  return vgg
+  return nn.Sequential(*useful_layers)
