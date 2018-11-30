@@ -76,19 +76,33 @@ class Shifter():
         self.__validate()
 
         return self.__thinned(self.__shifted())
-    
-    def all_displacements(self, tensor, x_max: int, y_max: int):
-        """
-        Returns a huge list of tuples where each tuple contains a 
-        possible displacement of tensor and the actual x and y values
-        used in the displacement.
-        All possible displacements within the passed in x and y maxes 
-        are generated.
-        """
+
+def generate(iterable):
+    for element in iterable:
+        yield element
+
+class ShiftItr():
+    """
+    Takes a tensor and maximum shifts for each axes. Iterates over every
+    possible shift of that tensor within those bounds.
+    NOTE: we iterate to conserve memory.
+    """
+    def __init__(self, tensor, x_max: int, y_max: int):
+        self.__shifter = Shifter()
+        self.__tensor = tensor
+
         x_displacements = list(range(-x_max, x_max + 1))
         y_displacements = list(range(-y_max, y_max + 1))
 
-        displacements = itertools.product(x_displacements, y_displacements)
+        self.__displacements = generate(itertools.product(x_displacements, y_displacements))
 
-        return [(self.displaced(tensor, displacement), displacement) for displacement in displacements]
+    def __iter__(self):
+        return self
+    
+    def __next__(self):
+        displacement = next(self.__displacements, None)
 
+        if displacement != None:
+            return (self.__shifter.displaced(self.__tensor, displacement), displacement)
+        else:
+            raise StopIteration()
