@@ -1,9 +1,19 @@
 import torch
 import numpy as np
-from utils import shift
+from torchvision import transforms
+from utils import shift, debug
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+dimensions_expected = 4
 
+def channel_normalize_(tensor):
+    if tensor.dim() != dimensions_expected:
+        raise ValueError("tensor has the wrong number of dimensions, expecting:  {}".format(dimensions_expected))
+
+    for i in range(tensor.size()[1]):
+        print(tensor[:, i].std())
+        tensor[:, i] -= tensor[:, i].mean()
+        tensor[:, i] /= tensor[:, i].std()
 
 def gram_matrix(input):
     a, b, c, d = input.size()  # a=batch size(=1)
@@ -33,8 +43,13 @@ def deep_correlation_matrix(tensor):
 
     # Calculate the displacement matrix
     matrix = tensor.new(tensor * 0.0)
-
+    count = 0
     for displacement in nexus:
+        count += 1
+        if count == 30:
+            debug.tensor_count()
+            count = 0
+            
         x_displacement, y_displacement = displacement[1] 
         weighting = (
             (x_size - abs(x_displacement)) * (y_size - abs(y_displacement))
@@ -45,6 +60,8 @@ def deep_correlation_matrix(tensor):
             (y_dim, x_dim)
         )
         matrix[:, :, y_displacement + y_max_displacement - 1, x_displacement + x_max_displacement - 1] = displacement_score
+
+    channel_normalize_(matrix)
 
     return matrix
 

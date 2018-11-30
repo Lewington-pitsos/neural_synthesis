@@ -8,14 +8,15 @@ class LossFn():
     Has a loss function, which should take the target values, and a 
     list of feature maps and return a scalar loss value.
     """
-    def __init__(self, target: list, hooks: list, loss_fn: Callable):
-        self.target = target
-        self.hooks = hooks
-        self.loss_fn = loss_fn
+    def __init__(self, target: list, hooks: list, loss_fn: Callable, scale: int=1):
+        self.__scale = scale
+        self.__target = target
+        self.__hooks = hooks
+        self.__loss_fn = loss_fn
     
     def loss(self) -> torch.Tensor:
-        feature_maps = [hook.features for hook in self.hooks]
-        return self.loss_fn(self.target, feature_maps)
+        feature_maps = [hook.features for hook in self.__hooks]
+        return self.__loss_fn(self.__target, feature_maps) * self.__scale
 
 class LossCollector():
     """
