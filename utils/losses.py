@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from utils import stats, shift, img
 
-def smoothing_loss(tensor, sigma=0.0001):
+def smoothing_loss(tensor, sigma: int =0.0001):
     """
     Calculates smoothing factor loss according to "Deep Correlations for Texture synthesis
     NOTE: the larger the incoming tensor the smaller the smoothing_loss. I
@@ -22,15 +22,16 @@ def smoothing_loss(tensor, sigma=0.0001):
 
     return 1 / ((sum_log * (2 * sigma)))  
 
-def deep_correlation_loss(target, sample_features):
+def deep_correlation_loss(target: list, sample_features: list) -> int:
 
     loss = 0
 
     for index in range(len(sample_features)):
         sample_matrix = stats.deep_correlation_matrix(sample_features[index])
-        loss += torch.sum((target[index] - sample_matrix) ** 2 )
+        loss += 0.25 * torch.sum((target[index] - sample_matrix) ** 2 )
+    print(loss)
 
-    return loss
+    return loss * 1000
     
 
     

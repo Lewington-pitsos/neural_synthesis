@@ -23,11 +23,10 @@ class Shifter():
     def __thinned(self, tensor):
         """
         Accepts a tensor with 4 dimensions. 
-        Returns a clone of that tensor with edge values raplced with 0's. 
+        Returns a clone of that tensor with edge values replaced with 0's. 
         x and y dictate how many edge values along each axis to replace. 
         axis_offset is used for tensors with > 2 dimensions.
         """
-
         tensor_clone = tensor.clone()
         x, y = self.__distance
 
@@ -44,10 +43,9 @@ class Shifter():
 
     def __shifted(self):
         """
-        Accepts a tensor. Returns a clonde of that tensor shifted
+        Accepts a tensor. Returns a clone of that tensor shifted
         by the given distance along the given axis.
         """
-
         ndarray = self.__tensor.detach().cpu().numpy()
 
         return torch.from_numpy(np.roll(ndarray, self.__distance, self.__axes)).to(self.__device)
@@ -68,12 +66,8 @@ class Shifter():
         not wrap. All incoming values are zeros.
         """
 
-        if torch.cuda.is_available(): # must convert to cpu if currently on gpu
-            tensor = tensor.cpu()
-
         self.__distance = distance
         self.__tensor = tensor
-        self.__validate()
 
         return self.__thinned(self.__shifted())
 
